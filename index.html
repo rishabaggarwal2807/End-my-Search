@@ -291,62 +291,11 @@
     }
 
        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .video-grid {
-                grid-template-columns: repeat(4, 1fr);
-                margin-left: 0;
-            }
-
-            .description-box {
-                position: relative;
-                margin: auto;
-                width: 80%;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .video-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .nav-links {
-                margin-right: 15px;
-            }
-
-            #refreshButton {
-                padding: 8px 16px;
-            }
-
-            h1 {
-                font-size: 2em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .video-grid {
-                grid-template-columns: repeat(1, 1fr);
-            }
-
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .button-rail {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 5px;
-            }
-
-            .nav-links {
-                justify-content: center;
-                margin-top: 10px;
-            }
-
-            .search-container {
-                margin-top: 10px;
-                justify-content: center;
-            }
-        }
+       @media (max-width: 767px) {
+    .search-container {
+        display: none; /* Hides the search container on screens smaller than 767px */
+    }
+}
 
         
     </style>
