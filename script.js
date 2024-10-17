@@ -6,6 +6,9 @@ let currentPage = 1; // Current page number
 let randomNumbers = []; // To store random order indexes for the videos
 let currentSearchResults = []; // To store search results for pagination
 
+// Variable to handle offset for sports videos
+let offset = 0;  // Default is 0 (for other pages)
+
 // Function to fetch data for the current page
 async function fetchData() {
     let jsonFile;
@@ -13,12 +16,16 @@ async function fetchData() {
     // Check the current page URL to determine which JSON file to fetch
     if (window.location.href.includes('music.html')) {
         jsonFile = 'music.json';  // Load music data for music.html
+        offset = 4729;
     } else if (window.location.href.includes('movies.html')) {
         jsonFile = 'movies.json';  // Load movie data for movies.html
+        offset = 3411;
     } else if (window.location.href.includes('sports.html')) {
         jsonFile = 'sports.json';  // Load sports data for sports.html
+        offset = 6009;  // Set offset for sports.json (videos 6010 to 6931 in data.json)
     } else {
         jsonFile = 'data.json';  // Load general data for index.html or other pages
+        offset = 0;  // No offset for general pages
     }
 
     const response = await fetch(jsonFile);
@@ -52,14 +59,16 @@ function isBookmarked(videoID) {
     return bookmarks.includes(videoID);
 }
 
-// Function to toggle bookmark (add/remove)
-function toggleBookmark(videoID) {
-    if (isBookmarked(videoID)) {
+// Function to toggle bookmark (add/remove) with offset
+function toggleBookmark(videoIndex) {
+    const realVideoID = videoIndex + offset;  // Adjust video ID based on the offset
+
+    if (isBookmarked(realVideoID)) {
         // Remove bookmark
-        bookmarks = bookmarks.filter(id => id !== videoID);
+        bookmarks = bookmarks.filter(id => id !== realVideoID);
     } else {
         // Add bookmark
-        bookmarks.push(videoID);
+        bookmarks.push(realVideoID);
     }
     // Update localStorage
     localStorage.setItem('bookmarkedVideos', JSON.stringify(bookmarks));
@@ -71,8 +80,9 @@ function toggleBookmark(videoID) {
 function updateBookmarkButtons() {
     const bookmarkButtons = document.querySelectorAll('.bookmark-btn');
     bookmarkButtons.forEach(button => {
-        const videoID = button.getAttribute('data-video-id');
-        if (isBookmarked(parseInt(videoID))) {  // Ensure videoID is compared as a number
+        const videoID = parseInt(button.getAttribute('data-video-id')) + offset; // Adjust for offset
+
+        if (isBookmarked(videoID)) {  // Ensure videoID is compared as a number
             button.textContent = 'Bookmarked'; // Change button text
             button.classList.add('bookmarked'); // Add a class to style bookmarked videos
             button.style.backgroundColor = '#27ae60';  // Green for bookmarked
@@ -111,15 +121,15 @@ function displayVideos(videoIndexes) {
         // Create a bookmark button
         const bookmarkButton = document.createElement('button');
         bookmarkButton.classList.add('bookmark-btn');
-        bookmarkButton.setAttribute('data-video-id', index.toString()); // Use the video ID or index as string
-        bookmarkButton.textContent = isBookmarked(index) ? 'Bookmarked' : 'Bookmark'; // Initial text
-        bookmarkButton.style.backgroundColor = isBookmarked(index) ? '#27ae60' : 'rgba(255, 71, 87, 0.8)'; // Adjust color based on bookmark status
+        bookmarkButton.setAttribute('data-video-id', index.toString()); // Use the video index as string
+        bookmarkButton.textContent = isBookmarked(index + offset) ? 'Bookmarked' : 'Bookmark'; // Initial text
+        bookmarkButton.style.backgroundColor = isBookmarked(index + offset) ? '#27ae60' : 'rgba(255, 71, 87, 0.8)'; // Adjust color based on bookmark status
 
         // Add event listener for bookmarking
         bookmarkButton.addEventListener('click', (e) => {
             e.preventDefault();  // Prevent page reload
             e.stopPropagation(); // Prevent the click from bubbling up to the video item
-            toggleBookmark(index); // Toggle bookmark
+            toggleBookmark(index); // Toggle bookmark with index
         });
 
         // Append links, thumbnail, and bookmark button to the video item
@@ -214,17 +224,17 @@ function searchVideos() {
 function generateAndDisplaySearchResults() {
     const startIndex = (currentPage - 1) * videosPerPage; // Calculate start index
     const endIndex = startIndex + videosPerPage; // Calculate end index
-    const currentVideos = currentSearchResults.slice(startIndex, endIndex); // Get current page videos
-    displayVideos(currentVideos); // Display videos
+    const currentVideos = currentSearchResults.slice(startIndex, endIndex); // Get current page results
+    displayVideos(currentVideos); // Display the search results
 
-    updatePaginationButtons(currentSearchResults.length); // Update pagination buttons
+    updatePaginationButtons(currentSearchResults.length); // Update pagination for search results
 }
 
-// Attach the search function to the search button click event
-document.querySelector('.search-container button').addEventListener('click', searchVideos);
+// Fetch data and search data on page load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchData();
+    fetchSearchData(); // Always fetch search data from data.json
+});
 
-// Fetch data from JSON when the page loads
-window.onload = async function() {
-    await fetchData(); // Fetch page-specific data
-    await fetchSearchData(); // Fetch search data (always from data.json)
-};
+// Attach search event to search button
+document.querySelector('.search-container button').addEventListener('click', searchVideos);
